@@ -1,0 +1,25 @@
+﻿# Environment & secrets
+jarvis_ai/.env
+jarvis_ai/token.json
+jarvis_ai/credentials.json
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+
+# Virtual environments
+.venv/
+venv/
+jarvis_ai/venv/
+
+# Vector DB
+jarvis_ai/memory/faiss_db/
+
+# Logs
+jarvis_ai/logs/
+
+# IDE
+.vscode/
+.idea/
