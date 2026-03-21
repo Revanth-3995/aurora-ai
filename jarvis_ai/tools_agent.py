@@ -182,3 +182,27 @@ def build_aurora_agent(llm: Any):
     raise NotImplementedError(
         "Use run_aurora_turn(model, history, user_input) from this module instead of build_aurora_agent."
     )
+
+def filter_tools_for_intent(all_tools, intent_category):
+    """Filters the generated tools based precisely on the identified intent."""
+    if not all_tools or intent_category == "CHAT":
+        return None
+        
+    declarations = all_tools[0].function_declarations
+    filtered = []
+    
+    for dec in declarations:
+        name = dec.name.lower()
+        if intent_category == "SCHEDULE" and "calendar" in name:
+            filtered.append(dec)
+        elif intent_category == "RESEARCH" and "research" in name:
+            filtered.append(dec)
+        elif intent_category == "CODE" and "code" in name:
+            filtered.append(dec)
+        elif intent_category == "RAG" and "rag" in name:
+            filtered.append(dec)
+            
+    if not filtered:
+        return None
+        
+    return [content_types.Tool(function_declarations=filtered)]
