@@ -13,15 +13,13 @@ This project demonstrates a complete Agentic AI system using **Google Gemini's n
 
 ---
 
-## 🆕 What's New (v2)
+## 🆕 What's New (v3: Multi-Agent ReAct Hub)
 
-- ✅ Live **Google Calendar** integration via OAuth 2.0 — schedules real events directly
-- ✅ **Tavily** web research tool — real-time information retrieval
-- ✅ **Python code execution** tool — sandboxed execution with stdout/stderr
-- ✅ Native `google-generativeai` SDK for tool-calling (no LangChain dependency for agents)
-- ✅ Custom backend tool registry with feature flags via `.env`
-- ✅ Automatic function calling via Gemini's built-in tool-use loop
-- ✅ Rate-limit retry logic with exponential backoff
+- ✅ **Intent Agent Framework:** Direct programmatic query routing (CHAT, SCHEDULE, RESEARCH, CODE).
+- ✅ **Planner & Executor Agents:** Complex queries are autonomously decomposed into sequential JSON execution steps.
+- ✅ **Intelligent Model Proxy:** A custom `FallbackGenerativeModel` intercepts Google 429 API rate limits, effortlessly hot-swapping down to lightweight models mid-execution.
+- ✅ Live **Google Calendar** integration via OAuth 2.0 (schedules real events instantly utilizing dynamic OS timezone context)
+- ✅ **Tavily** web research & Sandboxed **Python Execution** tools.
 
 ---
 
@@ -67,24 +65,18 @@ This project demonstrates a complete Agentic AI system using **Google Gemini's n
 ```
 User (Text Input)
         ↓
-app.py  →  genai.GenerativeModel (gemini-2.5-flash)
+app.py  →  Intent Agent (JSON Routing)
         ↓
-Gemini Automatic Function Calling Loop
+    [Complex Intent] → Planner Agent (Decomposes objective into JSON step-array)
+                        ↓
+                       Executor Agent (Iterates sequentially, maintains dynamic intra-step context)
+                        ↓
+FallbackGenerativeModel Proxy (Intercepts 429 API blocks natively)
         ↓
-tools_agent.py  →  get_gemini_tools()
-        ↓
-backend/tools/__init__.py  →  get_tool_registry()
-   ├── calendar_google    (Google Calendar API)
+backend/tools/__init__.py
+   ├── calendar_google    (Google Calendar API via OAuth)
    ├── code_advanced      (Python sandbox)
    └── research_advanced  (Tavily web search)
-        ↓
-LangChain RAG Layer (separate pipeline)
-   ├── rag/ingest.py      (Document ingestion)
-   └── rag/retriever.py   (Semantic search)
-        ↓
-Memory Layer
-   ├── Short-term (chat history)
-   └── Long-term  (FAISS / Chroma vector DB)
         ↓
 Response to User
 ```
@@ -136,7 +128,11 @@ agentic_ai_project/
 │   ├── .env                        # API keys & feature flags (not committed)
 │   ├── config/
 │   │   └── settings.py
+│   ├── llm_wrapper.py              # Fallback proxy intercepts 429 quota exhaustion
 │   ├── agents/
+│   │   ├── intent_agent.py         # Categorization routing
+│   │   ├── planner_agent.py        # Breaks down goals
+│   │   └── executor_agent.py       # ReAct tool invocation
 │   ├── rag/
 │   │   ├── ingest.py
 │   │   └── retriever.py

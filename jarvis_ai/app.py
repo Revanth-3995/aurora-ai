@@ -24,6 +24,8 @@ from config.settings import GEMINI_API_KEY
 from tools_agent import get_gemini_tools, filter_tools_for_intent
 from google.generativeai.types import content_types
 from agents.intent_agent import classify_intent
+from agents.planner_agent import generate_plan
+from agents.executor_agent import execute_plan
 
 
 def main() -> None:
@@ -75,51 +77,37 @@ def main() -> None:
             
             print(f"🧠 Intent Detected: {category} ({reasoning})")
             
-            active_tools = filter_tools_for_intent(tools, category)
-            tool_count = len(active_tools[0].function_declarations) if active_tools else 0
+            if category == "CHAT":
+                chat_model = FallbackGenerativeModel(
+                    "gemini-2.5-flash", "gemini-2.5-flash-lite",
+                    system_instruction=SYSTEM_PROMPT
+                )
+                chat = chat_model.start_chat(history=conversation_history)
+                response = chat.send_message(user_input)
+                print(f"\nAURORA: {response.text}")
+                conversation_history = chat.history
+                continue
+                
+            print("AURORA is generating a multi-step execution plan...")
+            # We explicitly declare the system's modular arsenal
+            available_tools_string = "research_advanced, calendar_google, code_advanced, rag_tool"
             
-            print(f"AURORA is thinking (routing with {tool_count} enabled tools)...")
+            # Extract the last few turns of dialogue so the Planner has full conversational context
+            context_string = "\n".join([f"{msg.role}: {msg.parts[0].text}" for msg in conversation_history[-4:]]) if conversation_history else ""
+            enhanced_input = f"{context_string}\nUser Goal: {user_input}" if context_string else user_input
             
-            # Spin up an exact model clone restricted to ONLY the permitted tools
-            turn_model = FallbackGenerativeModel(
-                "gemini-2.5-flash", "gemini-2.5-flash-lite",
-                tools=active_tools,
-                system_instruction=SYSTEM_PROMPT
-            )
-            chat = turn_model.start_chat(
-                history=conversation_history,
-                enable_automatic_function_calling=True
-            )
-
-            max_retries = 3
-            retry_delay = 2
-            last_error = None
-
-            for attempt in range(max_retries):
-                try:
-                    response = chat.send_message(user_input)
-                    text = response.text
-                    print(f"\nAURORA: {text}")
-                    last_error = None
-                    # Save the latest history for the next turn
-                    conversation_history = chat.history
-                    break
-                except Exception as api_error:
-                    last_error = api_error
-                    error_msg = str(api_error).lower()
-                    if "429" in error_msg or "quota" in error_msg or "exhausted" in error_msg:
-                        print(
-                            f"⚠️  Rate limit hit. Retrying in {retry_delay}s... "
-                            f"(Attempt {attempt + 1}/{max_retries})"
-                        )
-                        time.sleep(retry_delay)
-                        retry_delay *= 2
-                    else:
-                        print(f"❌ Error: {api_error}")
-                        break
-
-            if last_error is not None:
-                print("❌ Failed after maximum retries. Check your API key and network.")
+            plan = generate_plan(enhanced_input, intent_model, available_tools_info=available_tools_string)
+            print(f"Plan Summary: {plan.get('plan_summary')}")
+            
+            print("AURORA is executing the plan autonomously...")
+            final_result = execute_plan(plan, system_prompt=SYSTEM_PROMPT)
+            
+            print(f"\nAURORA: {final_result}")
+            
+            # Seamlessly ingest the complex interaction back into the short-term conversational history 
+            # so the agent remembers what it just did!
+            conversation_history.append({'role': 'user', 'parts': [{'text': user_input}]})
+            conversation_history.append({'role': 'model', 'parts': [{'text': final_result}]})
 
         except KeyboardInterrupt:
             print("\nAURORA shutting down...")
