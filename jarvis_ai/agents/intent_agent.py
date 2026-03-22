@@ -15,7 +15,7 @@ def classify_intent(user_input: str, model: genai.GenerativeModel) -> dict:
         "properties": {
             "category": {
                 "type": "string",
-                "description": "The category of the user's intent. Must be exactly one of: CHAT, SCHEDULE, RESEARCH, CODE, RAG.",
+                "description": "The category of the user's intent. Must be exactly one of: CHAT, SCHEDULE, RESEARCH, CODE, RAG, MEMORY.",
             },
             "reasoning": {
                 "type": "string",
@@ -34,6 +34,7 @@ Analyze the user's input and categorize it strictly into one of the following in
 - RESEARCH: Questions requiring up-to-date information, news, or deep web searches via Tavily.
 - CODE: Requests that involve high-level math, writing scripts, or executing Python code.
 - RAG: Requests asking to summarize, read, or search through the user's uploaded personal documents, notes, or PDFs.
+- MEMORY: Any explicit request for you to remember, save, or store a fact, preference, or goal about the user for the long term.
 
 User Input: "{user_input}"
 """

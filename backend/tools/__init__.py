@@ -49,6 +49,12 @@ def get_tool_registry() -> Dict[str, ToolFn]:
         except Exception:
             pass
 
+    try:
+        from backend.tools.memory.tool_memory import execute_memory_save
+        registry["memory_save"] = execute_memory_save
+    except Exception as e:
+        print(f"Memory tool offline: {e}")
+
     return registry
 
 

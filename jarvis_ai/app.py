@@ -26,6 +26,7 @@ from google.generativeai.types import content_types
 from agents.intent_agent import classify_intent
 from agents.planner_agent import generate_plan
 from agents.executor_agent import execute_plan
+from memory.chroma_manager import get_memory_manager
 
 
 def main() -> None:
@@ -50,13 +51,7 @@ def main() -> None:
     # We manually manage history to recreate the chat object with specific tools per turn
     conversation_history = []
     
-    SYSTEM_PROMPT = f"You are AURORA-AI. The current system date and time is {datetime.now().strftime('%A, %B %d, %Y %I:%M %p %Z')}. Use this exact date as your unshakeable absolute reference for any temporal queries (today, tomorrow, next week). You MUST autonomously infer the user's timezone from this system time (e.g., IST -> Asia/Kolkata). Never ask the user for their timezone."
-
-    # Base model for Intent Classification (no tools)
-    intent_model = FallbackGenerativeModel(
-        "gemini-2.5-flash", "gemini-2.5-flash-lite", 
-        system_instruction=SYSTEM_PROMPT
-    )
+    BASE_SYSTEM_PROMPT = f"You are AURORA-AI. The current system date and time is {datetime.now().strftime('%A, %B %d, %Y %I:%M %p %Z')}. Use this exact date as your unshakeable absolute reference for any temporal queries (today, tomorrow, next week). You MUST autonomously infer the user's timezone from this system time (e.g., IST -> Asia/Kolkata). Never ask the user for their timezone."
 
     while True:
         try:
@@ -70,7 +65,20 @@ def main() -> None:
                 print("AURORA shutting down...")
                 break
 
+            # --- Long-Term Memory Retrieval ---
+            memory_manager = get_memory_manager()
+            retrieved_facts = memory_manager.retrieve_related_memories(user_input, n_results=3)
+            
+            dynamic_system_prompt = BASE_SYSTEM_PROMPT
+            if retrieved_facts:
+                facts_str = "\n".join([f"- {fact}" for fact in retrieved_facts])
+                dynamic_system_prompt += f"\n\n[LONG-TERM MEMORY CONTEXT]\nThe following facts are known about the user:\n{facts_str}"
+
             print("AURORA is analyzing intent...")
+            intent_model = FallbackGenerativeModel(
+                "gemini-2.5-flash", "gemini-2.5-flash-lite", 
+                system_instruction=dynamic_system_prompt
+            )
             intent_dict = classify_intent(user_input, intent_model)
             category = intent_dict.get("category", "CHAT")
             reasoning = intent_dict.get("reasoning", "")
@@ -80,7 +88,7 @@ def main() -> None:
             if category == "CHAT":
                 chat_model = FallbackGenerativeModel(
                     "gemini-2.5-flash", "gemini-2.5-flash-lite",
-                    system_instruction=SYSTEM_PROMPT
+                    system_instruction=dynamic_system_prompt
                 )
                 chat = chat_model.start_chat(history=conversation_history)
                 response = chat.send_message(user_input)
@@ -90,17 +98,27 @@ def main() -> None:
                 
             print("AURORA is generating a multi-step execution plan...")
             # We explicitly declare the system's modular arsenal
-            available_tools_string = "research_advanced, calendar_google, code_advanced, rag_tool"
+            available_tools_string = "research_advanced, calendar_google, code_advanced, rag_tool, memory_save"
             
             # Extract the last few turns of dialogue so the Planner has full conversational context
-            context_string = "\n".join([f"{msg.role}: {msg.parts[0].text}" for msg in conversation_history[-4:]]) if conversation_history else ""
+            context_string = ""
+            for msg in conversation_history[-4:]:
+                if isinstance(msg, dict):
+                    role = msg.get('role', '')
+                    parts = msg.get('parts', [])
+                    text = parts[0].get('text', '') if parts and isinstance(parts[0], dict) else ''
+                else:
+                    role = msg.role
+                    text = msg.parts[0].text if msg.parts else ''
+                context_string += f"{role}: {text}\n"
+                
             enhanced_input = f"{context_string}\nUser Goal: {user_input}" if context_string else user_input
             
             plan = generate_plan(enhanced_input, intent_model, available_tools_info=available_tools_string)
             print(f"Plan Summary: {plan.get('plan_summary')}")
             
             print("AURORA is executing the plan autonomously...")
-            final_result = execute_plan(plan, system_prompt=SYSTEM_PROMPT)
+            final_result = execute_plan(plan, system_prompt=dynamic_system_prompt)
             
             print(f"\nAURORA: {final_result}")
             

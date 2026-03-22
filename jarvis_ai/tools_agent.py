@@ -22,6 +22,7 @@ _registry = get_tool_registry()
 _calendar_backend = _registry.get("calendar_google")
 _code_backend = _registry.get("code_advanced")
 _research_backend = _registry.get("research_advanced")
+_memory_backend = _registry.get("memory_save")
 
 
 def _to_dict(struct: Any) -> dict:
@@ -71,6 +72,14 @@ _RESEARCH_SCHEMA = {
     "required": ["query"],
 }
 
+_MEMORY_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "fact": {"type": "string", "description": "The specific fact, goal, or preference to save permanently."},
+    },
+    "required": ["fact"],
+}
+
 
 def _calendar_tool(**kwargs: Any) -> str:
     if _calendar_backend is None:
@@ -105,6 +114,13 @@ def _research_tool(query: str, max_results: int = 5, save_to_memory: bool = Fals
         "max_results": max_results,
         "save_to_memory": save_to_memory,
     })
+    return json.dumps(result, ensure_ascii=False)
+
+
+def _memory_tool(fact: str) -> str:
+    if _memory_backend is None:
+        return json.dumps({"ok": False, "error": "Memory tool is not available."})
+    result = _memory_backend({"fact": fact})
     return json.dumps(result, ensure_ascii=False)
 
 
@@ -153,6 +169,16 @@ def get_gemini_tools() -> List[content_types.Tool]:
             )
         )
 
+    if _memory_backend is not None:
+        declarations.append(
+            content_types.CallableFunctionDeclaration(
+                name="memory_save",
+                description="Save a specific permanent fact, preference, or goal about the user into long-term personal storage.",
+                parameters=_MEMORY_SCHEMA,
+                function=lambda **kw: _memory_tool(kw.get("fact", "")),
+            )
+        )
+
     if not declarations:
         return []
     return [content_types.Tool(function_declarations=declarations)]
@@ -171,6 +197,8 @@ def execute_tool(name: str, args: dict) -> Any:
             args.get("max_results", 5),
             args.get("save_to_memory", False),
         )
+    if name == "memory_save":
+        return _memory_tool(args.get("fact", ""))
     return {"error": f"Unknown tool: {name}"}
 
 
@@ -200,6 +228,8 @@ def filter_tools_for_intent(all_tools, intent_category):
         elif intent_category == "CODE" and "code" in name:
             filtered.append(dec)
         elif intent_category == "RAG" and "rag" in name:
+            filtered.append(dec)
+        elif intent_category == "MEMORY" and "memory" in name:
             filtered.append(dec)
             
     if not filtered:
