@@ -14,3 +14,8 @@ SpeechRecognition
 pyttsx3
 pydantic
 dateparser
+fastapi
+uvicorn
+pydantic
+python-multipart
+pytest

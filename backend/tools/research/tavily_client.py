@@ -5,7 +5,7 @@ from typing import Any, Dict, List
 
 import requests
 
-from backend.config import settings
+from backend.config.config import settings
 
 logger = logging.getLogger(__name__)
 

@@ -1,6 +1,6 @@
 import datetime as dt
 
-from backend.config import Settings
+from backend.config.config import Settings
 from backend.tools.code.executor import run_code_snippet
 
 

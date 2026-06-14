@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 from typing import Any, Dict
 
-from backend.config import settings
+from backend.config.config import settings
 from backend.tools.code.executor import run_code_snippet
 
 logger = logging.getLogger(__name__)
