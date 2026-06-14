@@ -1,158 +1,95 @@
-# 🚀 AURORA-AI
+# 🚀 AURORA-AI Platform
 ### Autonomous Unified Reasoning & Orchestration AI
 
 ---
 
 ## 🧠 Overview
 
-AURORA-AI is a multi-agent AI assistant designed to perform reasoning, planning, and task execution using Large Language Models (LLMs).
+AURORA-AI is a production-ready, multi-agent AI platform designed to perform reasoning, planning, and task execution using Large Language Models (LLMs).
 
-It integrates Google Calendar scheduling, web research, Python code execution, Retrieval-Augmented Generation (RAG), and memory systems to assist users with academic tasks, coding, research, and scheduling.
-
-This project demonstrates a complete Agentic AI system using **Google Gemini's native tool-calling** for real-time tool execution, and **LangChain** for the RAG pipeline.
+This project has been transformed from a CLI workshop demo into a polished, modern Agentic AI application with a FastAPI backend and a React/Vite frontend. It integrates Google Calendar scheduling, web research, Python code execution, Retrieval-Augmented Generation (RAG), and memory systems.
 
 ---
 
-## 🆕 What's New (v3: Multi-Agent ReAct Hub)
+## ✨ Features
 
-- ✅ **Intent Agent Framework:** Direct programmatic query routing (CHAT, SCHEDULE, RESEARCH, CODE).
-- ✅ **Planner & Executor Agents:** Complex queries are autonomously decomposed into sequential JSON execution steps.
-- ✅ **Intelligent Model Proxy:** A custom `FallbackGenerativeModel` intercepts Google 429 API rate limits, effortlessly hot-swapping down to lightweight models mid-execution.
-- ✅ Live **Google Calendar** integration via OAuth 2.0 (schedules real events instantly utilizing dynamic OS timezone context)
-- ✅ **Tavily** web research & Sandboxed **Python Execution** tools.
-
----
-
-## ✨ Key Features
-
-### 🤖 Agentic AI (Gemini Native Tool Use)
-- Reason → Act (call tool) → Observe (tool result) → Respond
-- Automatic function calling — no manual tool dispatch loop needed
-- Tools declared as OpenAPI-style JSON schemas
-
-### 📅 Google Calendar Integration
-- Schedule events directly into Google Calendar
-- Check availability within a time range
-- OAuth 2.0 — one-time browser login, token cached for future runs
-- Supports IST and any IANA timezone
-
-### 🌐 Web Research (Tavily)
-- Real-time web search and summarization
-- Returns concise answers with source citations
-- Optional long-term memory persistence
-
-### 💻 Code Execution
-- Execute Python snippets in a sandboxed environment
-- Returns stdout, stderr, and success/failure status
-- Configurable timeout and retry settings
-
-### 📚 Retrieval-Augmented Generation (RAG)
-- Query PDFs and personal notes via LangChain RetrievalQA
-- Document ingestion pipeline (`rag/ingest.py`)
-- Retriever for semantic search (`rag/retriever.py`)
-
-### 🧠 Memory System
-- Short-term: in-session conversation history
-- Long-term: vector storage (FAISS / Chroma)
-
-### 🎤 Voice Interaction *(Upcoming)*
-- Speech-to-text and text-to-speech
+- **Modern SaaS UI**: A professional dark-mode UI built with React, Vite, Tailwind CSS, and Framer Motion.
+- **Explainable AI (XAI)**: A real-time **Workflow Timeline** visualizes the Agent's reasoning, intent detection, tool selection, and step-by-step execution.
+- **Multi-Agent Architecture**:
+  - **Intent Agent**: Classifies queries.
+  - **Planner Agent**: Decomposes complex tasks.
+  - **Executor Agent**: Invokes tools and aggregates results.
+  - **Memory Agent**: Long-term context persistence.
+- **Dedicated Interfaces**:
+  - **Chat**: General conversational AI with markdown and XAI workflow.
+  - **Research Agent**: Autonomous deep web research using Tavily.
+  - **Document Intelligence (RAG)**: Drag-and-drop PDF ingestion with semantic search QA.
+  - **Calendar Agent**: Seamless Google Calendar scheduling.
+  - **Analytics Dashboard**: Real-time system monitoring.
 
 ---
 
-## 🏗️ System Architecture
+## 🏗️ Architecture
 
-```
-User (Text Input)
-        ↓
-app.py  →  Intent Agent (JSON Routing)
-        ↓
-    [Complex Intent] → Planner Agent (Decomposes objective into JSON step-array)
-                        ↓
-                       Executor Agent (Iterates sequentially, maintains dynamic intra-step context)
-                        ↓
-FallbackGenerativeModel Proxy (Intercepts 429 API blocks natively)
-        ↓
-backend/tools/__init__.py
-   ├── calendar_google    (Google Calendar API via OAuth)
-   ├── code_advanced      (Python sandbox)
-   └── research_advanced  (Tavily web search)
-        ↓
-Response to User
+```mermaid
+graph TD
+    User([User])
+
+    subgraph Frontend [React + Vite Frontend]
+        UI[Modern Dashboard UI]
+        Workflow[XAI Workflow Visualizer]
+    end
+
+    subgraph Backend [FastAPI Backend]
+        API[FastAPI Routes]
+
+        subgraph Agents
+            IA[Intent Agent]
+            PA[Planner Agent]
+            EA[Executor Agent]
+            MA[Memory Agent]
+        end
+
+        subgraph Tools
+            T1[Gemini LLM]
+            T2[Tavily Search]
+            T3[Google Calendar]
+            T4[PDF RAG FAISS]
+            T5[Python Sandbox]
+        end
+    end
+
+    User <--> UI
+    UI <--> |REST API| API
+    UI <--> Workflow
+    API --> IA
+    IA --> PA
+    PA --> EA
+    EA <--> MA
+    EA --> T1
+    EA --> T2
+    EA --> T3
+    EA --> T4
+    EA --> T5
 ```
 
 ---
 
-## 🛠️ Tech Stack
+## 🛠️ Technology Stack
 
-| Category       | Technology                                          |
-|----------------|-----------------------------------------------------|
-| Language       | Python 3.13                                         |
-| LLM            | Google Gemini 2.5 Flash (`google-generativeai`)     |
-| Agent Framework| Native Gemini tool-calling (no LangChain for agents)|
-| RAG Framework  | LangChain RetrievalQA                               |
-| Calendar       | Google Calendar API v3 + OAuth 2.0                  |
-| Search         | Tavily API                                          |
-| Vector DB      | FAISS / Chroma                                      |
-| Code Execution | Sandboxed Python subprocess                         |
-| Auth           | google-auth-oauthlib, google-auth-httplib2          |
-| UI             | CLI (Streamlit — upcoming)                          |
+| Component | Technology |
+|---|---|
+| **Frontend Framework** | React 18, Vite, TypeScript |
+| **Frontend Styling** | Tailwind CSS, Framer Motion |
+| **Backend Framework** | FastAPI, Pydantic, Uvicorn |
+| **AI Models** | Google Gemini (2.5 Flash) |
+| **Agent Paradigm** | Custom ReAct Loop, Native Tool Calling |
+| **Vector DB** | ChromaDB, FAISS |
+| **Data Fetching** | Axios, Recharts |
 
 ---
 
-## 📂 Project Structure
-
-```
-agentic_ai_project/
-├── backend/
-│   ├── config.py                   # Central settings (loads .env, feature flags)
-│   ├── __init__.py
-│   ├── memory/
-│   │   └── hooks.py
-│   └── tools/
-│       ├── __init__.py             # Tool registry (get_tool_registry)
-│       ├── types.py
-│       ├── calendar/
-│       │   ├── google_calendar_client.py
-│       │   └── tool_calendar_google.py
-│       ├── code/
-│       │   └── tool_code_advanced.py
-│       └── research/
-│           └── tool_research_advanced.py
-│
-├── jarvis_ai/
-│   ├── app.py                      # Main entry point
-│   ├── tools_agent.py              # Gemini tool declarations + registry bridge
-│   ├── credentials.json            # Google OAuth client secrets (not committed)
-│   ├── token.json                  # Cached OAuth token (auto-generated)
-│   ├── .env                        # API keys & feature flags (not committed)
-│   ├── config/
-│   │   └── settings.py
-│   ├── llm_wrapper.py              # Fallback proxy intercepts 429 quota exhaustion
-│   ├── agents/
-│   │   ├── intent_agent.py         # Categorization routing
-│   │   ├── planner_agent.py        # Breaks down goals
-│   │   └── executor_agent.py       # ReAct tool invocation
-│   ├── rag/
-│   │   ├── ingest.py
-│   │   └── retriever.py
-│   ├── memory/
-│   │   └── faiss_db/
-│   ├── tools/
-│   │   ├── calendar_tool.py
-│   │   ├── code_tool.py
-│   │   ├── file_tool.py
-│   │   ├── rag_tool.py
-│   │   └── search_tool.py
-│   └── requirements.txt
-│
-└── tests/
-    └── test_tools_basic.py
-```
-
----
-
-## ⚙️ Setup Instructions
+## 🚀 Installation & Setup
 
 ### 1. Clone the Repository
 
@@ -161,129 +98,65 @@ git clone https://github.com/Revanth-3995/aurora-ai.git
 cd aurora-ai
 ```
 
-### 2. Create Virtual Environment
+### 2. Backend Setup
 
 ```bash
+# Create and activate virtual environment
 python -m venv .venv
-.venv\Scripts\activate        # Windows
-source .venv/bin/activate     # Linux / Mac
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+
+# Install backend dependencies
+pip install -r requirements.txt
+
+# Create .env file in the root directory
+echo "GEMINI_API_KEY=your_key_here" >> .env
+echo "TAVILY_API_KEY=your_key_here" >> .env
+echo "ENABLE_GOOGLE_CALENDAR=true" >> .env
+echo "ENABLE_ADVANCED_CODE_TOOL=true" >> .env
+echo "ENABLE_ADVANCED_RESEARCH_TOOL=true" >> .env
+
+# Run the FastAPI server
+uvicorn backend.main:app --reload --port 8000
 ```
 
-### 3. Install Dependencies
+### 3. Frontend Setup
 
 ```bash
-pip install -r jarvis_ai/requirements.txt
-```
+# Open a new terminal
+cd frontend
 
-### 4. Configure `.env`
+# Install frontend dependencies
+npm install
 
-Create `jarvis_ai/.env` with the following:
-
-```env
-GEMINI_API_KEY=your_gemini_api_key
-TAVILY_API_KEY=your_tavily_api_key
-
-# Feature flags
-ENABLE_GOOGLE_CALENDAR=true
-ENABLE_ADVANCED_CODE_TOOL=true
-ENABLE_ADVANCED_RESEARCH_TOOL=true
-
-# Google OAuth paths (files live in jarvis_ai/)
-GOOGLE_CREDENTIALS_FILE=credentials.json
-GOOGLE_TOKEN_FILE=token.json
-```
-
-### 5. Set Up Google Calendar OAuth
-
-1. Go to [console.cloud.google.com](https://console.cloud.google.com) → Enable **Google Calendar API**
-2. Create **OAuth 2.0 Client ID** (Desktop App) → download JSON
-3. Save as `jarvis_ai/credentials.json`
-4. Go to **OAuth consent screen → Test Users** → add your Gmail
-5. First run opens a browser for authorization — `token.json` is saved automatically after login
-
-### 6. Run AURORA
-
-```bash
-cd "C:\Users\<you>\agentic_ai_project"
-.venv\Scripts\activate
-python jarvis_ai\app.py
+# Start the development server
+npm run dev
 ```
 
 ---
 
-## 🧪 Phase Status
+## 📡 API Documentation
 
-| Phase   | Description                              | Status           |
-|---------|------------------------------------------|------------------|
-| Phase 1 | Setup & LLM Connectivity                 | ✅ Completed      |
-| Phase 2 | RAG Implementation (LangChain)           | ✅ Completed      |
-| Phase 3 | Tool Integration (Calendar, Code, Research) | ✅ Completed   |
-| Phase 4 | Multi-Agent System                       | 🔄 In Progress   |
-| Phase 5 | Voice & Scheduling                       | ⏳ Pending        |
-| Phase 6 | Streamlit UI Development                 | ⏳ Pending        |
+The backend provides several RESTful endpoints documented automatically by FastAPI (Swagger UI available at `http://localhost:8000/docs`).
 
----
-
-## 🔍 Example Usage
-
-### General Chat
-```
-You: My name is Revanth
-AURORA: Nice to meet you, Revanth!
-
-You: What is my name?
-AURORA: Your name is Revanth.
-```
-
-### Google Calendar
-```
-You: Schedule a meeting called trial_meet on March 16 2026, 1pm to 2pm IST
-AURORA: The event 'trial_meet' has been scheduled for March 16, 2026,
-        from 1 PM to 2 PM IST.
-```
-
-### Web Research
-```
-You: Research the latest developments in agentic AI
-AURORA: [calls research_advanced tool → returns summarized findings + sources]
-```
-
-### Code Execution
-```
-You: Write and run Python code to compute the first 10 Fibonacci numbers
-AURORA: [calls code_advanced tool → returns stdout with results]
-```
-
-### RAG (Document Query)
-```
-You: Summarize the uploaded research paper on transformers
-AURORA: [retrieves relevant chunks via LangChain RAG → generates summary]
-```
+- `POST /chat`: Submit a query. Returns `{ response, intent, tool_used, reasoning, workflow }`.
+- `POST /research`: Trigger the autonomous research agent.
+- `POST /documents/upload`: Upload and ingest a PDF to the RAG FAISS database.
+- `POST /documents/ask`: Ask questions against the ingested knowledge base.
+- `POST /calendar`: Schedule Google Calendar events.
+- `GET /analytics`: Retrieve mock system statistics for the dashboard.
+- `GET /health`: System health check.
 
 ---
 
-## 🚀 Future Scope
+## 🔮 Future Scope
 
-- Full autonomous multi-agent task planning and execution
-- Streamlit web UI
-- Voice interaction (speech-to-text + text-to-speech)
-- Real-time calendar notifications and reminders
-- Multi-user support with per-user memory isolation
-- Migration to `google-genai` (new Google SDK)
+- **User Authentication**: Multi-user support with isolated RAG databases and OAuth.
+- **Voice Capabilities**: Whisper integration for voice-to-text.
+- **Agent Memory Optimization**: Implement memory decay algorithms to manage long-term token limits.
+- **Dockerization**: Complete containerization for 1-click deployment.
 
 ---
 
-## 📌 Highlights
+## 🤝 Contributors
 
-- Modular, scalable architecture with clean separation of concerns
-- Native Gemini tool-calling for agents + LangChain for RAG (best of both)
-- Feature-flag driven tool loading via `.env`
-- Production-style monorepo project structure
-- Real Google Calendar integration with OAuth 2.0
-- Agentic AI with automatic function calling (Reason → Act → Observe → Respond)
-
----
-
-## ⭐ Contribute / Feedback
-
-Feel free to fork the project or suggest improvements!
+Created for AI workshops, academic portfolios, and GitHub showcases to demonstrate real-world Agentic AI architecture.

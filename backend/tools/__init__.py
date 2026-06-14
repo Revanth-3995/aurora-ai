@@ -9,7 +9,7 @@ serializable data.
 
 from typing import Any, Callable, Dict
 
-from backend.config import settings
+from backend.config.config import settings
 
 
 ToolFn = Callable[[Dict[str, Any]], Dict[str, Any]]

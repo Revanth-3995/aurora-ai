@@ -6,7 +6,7 @@ import sys
 import tempfile
 from typing import Optional
 
-from backend.config import settings
+from backend.config.config import settings
 from backend.tools.types import CodeExecutionResult
 
 logger = logging.getLogger(__name__)

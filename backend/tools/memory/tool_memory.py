@@ -1,4 +1,4 @@
-from jarvis_ai.memory.chroma_manager import get_memory_manager
+from backend.memory.chroma_manager import get_memory_manager
 
 def execute_memory_save(payload: dict) -> str:
     """
